@@ -3,29 +3,33 @@
  *  network external sector
  */
 
-const utils = require("./utils");
+const utils = require("../utils");
 
 const http = require("http");
 const websocket = require('ws');
 const express = require('express');
-const body_parse = require('body-parser');
+
 
 // main class
 const app = {
+
+    // constants
+    name: 'phue bridge gateway service (external)',
     ws_port: 8081,
     http_port: 8080,
+    secure: false,
+
     // main method
     main: _ => {
-        console.log('phue bridge gateway service');
-        console.log('network external sector');
-        console.log('');
-
-        app.log("initializing");
-        web.init(_ => {
-            ws.init(_ => {
-                app.log('ready');
+        console.log(`${app.name.toUpperCase()}`);
+        utils.delay(_ => {
+            app.log("initializing");
+            web.init(_ => {
+                ws.init(_ => {
+                    app.log('ready');
+                });
             });
-        });
+        }, 50);
     },
     // module infra
     ws: null, web: null,
@@ -49,13 +53,13 @@ const app = {
 // websocket service
 const ws = {
     socket: null,
-    initialize: resolve => {
+    initialize_endpoints: resolve => {
 
         if (resolve) resolve();
     },
     init: resolve => {
         ws.log("initializing");
-        ws.initialize(resolve);
+        ws.initialize_endpoints(resolve);
     },
     // module infra
     log: utils.logger('ws'),
@@ -70,36 +74,73 @@ const ws = {
 
 // web service
 const web = {
-    express_api: null,
-    http_server: null,
-    cors: (req, res, next) => {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        next();
+    server: null,
+    request_handler: null,
+    client: {
+        forward_request: (url, method, headers, data) => {
+            web.log("forwarding request");
+            (async () => {
+                try {
+                    const response = await got({
+                        url: (`${(app.secure ? 'https' : 'http')}://${app.target}${url}`),
+                        method: (`${method}`).toUpperCase(),
+                        headers: headers,
+                        json: data
+                    });
+                    console.log(response.body);
+                } catch (error) {
+                    web.err('philips hue connect error', error);
+                }
+            })();
+        },
+        handle_response: (res) => {
+
+        }
     },
-    set_type: (req, res, type) => {
-        res.setHeader('content-type', `${type}`);
+    // cors: (req, res, next) => {
+    //     res.header("Access-Control-Allow-Origin", "*");
+    //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    //     next();
+    // },
+    // return_error: (res, code, msg) => {
+    //     res.status(code);
+    //     web.set_type(res, 'application/json');
+    //     web.return_json({ status: code, success: false, message: msg });
+    // },
+    handle_event: (req, res, ep, data) => {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            web.err('JSON error', e);
+        }
+        console.log('');
+        web.log('received request')
+        console.log('url: \t\t', req.url);
+        console.log('endpoint: \t', ep);
+        console.log('method: \t', req.method);
+        console.log('headers: \n', req.headers);
+        console.log('data: \n', data);
+        console.log('');
+
+        // TODO: send req to websocket, wait for response, send back response to phue client
+
+        res.end();
     },
-    return_error: (req, res, code, msg) => {
-        res.status(code);
-        web.set_type(req, res, 'application/json');
-        res.send(JSON.stringify({
-            status: code, success: false, message: msg
-        }, null, 2));
+    initialize_endpoints: resolve => {
+        web.request_handler = (req, res) => {
+            let body_data = '';
+            req.on('data', chunk => { body_data += chunk; });
+            req.on('end', () => {
+                web.handle_event(req, res, (`${req.url}`).split('/').slice(1), body_data);
+            });
+        };
+        if (resolve) resolve();
     },
     init: resolve => {
         web.log("initializing");
-        web.express_api = express();
-        web.http_server = http.Server(web.express_api);
-        web.express_api.use(body_parse.json());
-        web.express_api.use(body_parse.urlencoded({ extended: true }));
-        web.express_api.use(web.cors);
-        // web.express_api.use(express.static("static"));
-        web.express_api.get("/", (req, res) => {
-            web.set_type(req, res, 'text/plain');
-            res.send('hello world');
-        });
-        web.express_api.listen(app.http_port, _ => {
+        web.initialize_endpoints(_ => {
+            web.server = http.createServer(web.request_handler);
+            web.server.listen(app.http_port);
             web.log("listening on", app.http_port);
             if (resolve) resolve();
         });
@@ -109,9 +150,9 @@ const web = {
     err: utils.logger('web', true),
     exit: resolve => {
         web.log("exit");
-        web.http_server.close(_ => {
-            if (resolve) resolve();
-        });
+        // web.http.close(_ => {
+        if (resolve) resolve();
+        // });
     }
 };
 

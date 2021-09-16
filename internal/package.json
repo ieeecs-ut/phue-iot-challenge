@@ -1,0 +1,18 @@
+{
+    "name": "phue-gateway-internal",
+    "version": "1.0.0",
+    "description": "Philips hue bulb bridge phue API-wrapping gateway service (network internal sector)",
+    "main": "gateway-internal.js",
+    "scripts": {
+        "start": "node gateway-internal.js",
+        "test": "nodemon --ignore 'mongodb/*' --ignore 'html/*' gateway-internal.js dev "
+    },
+    "author": "Anuv Gupta",
+    "license": "ISC",
+    "dependencies": {
+        "got": "^11.8.2"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.12"
+    }
+}

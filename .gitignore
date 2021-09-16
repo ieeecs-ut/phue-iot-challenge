@@ -5,16 +5,18 @@
 *.DS_Store
 Thumbs.db
 
-#general
-**/__pycache__
-
 # external
 external/node_modules
-external/tests/venv/*
-!external/tests/venv/venv
+
 
 # internal
-# // nothing for now
+internal/node_modules
+
+#tests 
+**/__pycache__
+tests/venv/*
+!tests/venv/venv
+
 
 # vscode
 .vscode/*

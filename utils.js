@@ -1,6 +1,11 @@
 // utilities
 
 const utils = {
+    delay: (callback, timeout) => {
+        setTimeout(_ => {
+            process.nextTick(callback);
+        }, timeout);
+    },
     rand_int: (low, high) => {
         // inclusive
         return (Math.floor(Math.random() * (high - low + 1)) + low);
