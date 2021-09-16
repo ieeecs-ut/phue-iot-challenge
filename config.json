@@ -1,0 +1,9 @@
+{
+    "key": "__hummus__",
+    "ws_port": 8081,
+    "http_port": 8080,
+    "gateway_url": "localhost:8081",
+    "bridge_ip": "192.168.0.100",
+    "secure": false,
+    "ws_reconnect_interval": 5000
+}
