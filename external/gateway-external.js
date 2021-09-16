@@ -19,8 +19,8 @@ const app = {
 
     // constants
     name: "phue bridge gateway service (external)",
-    ws_port: config.ws_port,
-    http_port: config.http_port,
+    ws_port: (env === 'prod' ? config.ws_port : 8081),
+    http_port: (env === 'prod' ? config.http_port : 8080),
     secure: config.secure,
 
     // main method

@@ -4,7 +4,7 @@
     "description": "Philips hue bulb bridge phue API-wrapping gateway service (network internal sector)",
     "main": "gateway-internal.js",
     "scripts": {
-        "start": "node gateway-internal.js",
+        "start": "node gateway-internal.js prod",
         "test": "nodemon --ignore 'mongodb/*' --ignore 'html/*' gateway-internal.js dev "
     },
     "author": "Anuv Gupta",

@@ -1,8 +1,8 @@
 {
     "key": "__hummus__",
-    "ws_port": 8081,
-    "http_port": 8080,
-    "gateway_url": "localhost:8081",
+    "ws_port": 3023,
+    "http_port": 3022,
+    "gateway_url": "phue.anuv.me/socket",
     "bridge_ip": "192.168.0.100",
     "secure": false,
     "ws_reconnect_interval": 3000

@@ -19,7 +19,7 @@ const app = {
 
     // constants
     name: "phue bridge gateway service (internal)",
-    gateway_url: config.gateway_url,
+    gateway_url: (env === 'prod' ? config.gateway_url : "localhost:8081"),
     bridge_ip: config.bridge_ip,
     secure: false,
 
