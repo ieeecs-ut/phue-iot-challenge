@@ -93,10 +93,13 @@ const ws = {
         switch (event) {
             case 'identity':
                 if (data.success === true) {
-                    ws.log("identified with gateway server");
+                    ws.log("identified with gateway server as target");
                 } else {
                     ws.err("failed to identify with gateway server");
                 }
+                break;
+            case 'phue_gateway_req':
+                ws.api.handle_phue_gateway_req(data.id, data.request);
                 break;
             default:
                 ws.log(`unknown event ${event}`);
@@ -106,6 +109,12 @@ const ws = {
     api: {
         login: _ => {
             ws.send('identity', { key: config.key });
+        },
+        handle_phue_gateway_req: (id, request) => {
+            web.forward_request(id, request.url, request.method, request.headers, request.data);
+        },
+        return_phue_gateway_res: (id, response) => {
+            ws.send('phue_gateway_res', { id: (`${id}`), data: response });
         }
     },
     initialize_client: resolve => {
@@ -151,24 +160,31 @@ const ws = {
 
 // web client
 const web = {
-    forward_request: (url, method, headers, data) => {
-        web.log("forwarding request");
+    forward_request: (id, url, method, headers, data) => {
+        const full_url = (`${(app.secure ? 'https' : 'http')}://${app.bridge_ip}${url}`);
+        web.log(`forwarding request to hue bridge @ ${full_url}`);
         (async () => {
             try {
-                const response = await got({
-                    url: (`${(app.secure ? 'https' : 'http')}://${app.bridge_ip}${url}`),
-                    method: (`${method}`).toUpperCase(),
-                    headers: headers,
-                    json: data
-                });
-                console.log(response.body);
+                method = (`${method}`).toUpperCase();
+                const got_req = {
+                    url: full_url,
+                    method: method,
+                    headers: headers
+                };
+                if (method != "GET") got_req.body = data;
+                const response = await got(got_req);
+                web.handle_response(id, response.body);
             } catch (error) {
-                web.err("philips hue connect error", error);
+                web.err("philips hue bridge connect error", error);
             }
         })();
     },
-    handle_response: (res) => {
-
+    handle_response: (req_id, res) => {
+        console.log("\t");
+        web.log(`received request ${req_id} from hue bridge`);
+        console.log(res);
+        console.log("\t");
+        ws.api.return_phue_gateway_res(req_id, res);
     },
     init: resolve => {
         web.log("initializing");

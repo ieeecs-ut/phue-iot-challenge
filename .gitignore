@@ -1,13 +1,14 @@
 # gitignore
 
+
 # system
 .DS_Store
 *.DS_Store
 Thumbs.db
 
+
 # external
 external/node_modules
-
 
 # internal
 internal/node_modules
@@ -25,6 +26,7 @@ tests/venv/*
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
+
 
 # misc
 /.idea

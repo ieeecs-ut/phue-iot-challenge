@@ -8,7 +8,6 @@ const utils = require('../utils');
 const fs = require('fs');
 const http = require('http');
 const websocket = require('ws');
-const express = require('express');
 
 // environment
 const args = process.argv.slice(2);
@@ -65,10 +64,14 @@ const ws = {
     await_response: (client, request, resolve) => {
         const req_id = utils.rand_id();
         ws.gateway_res[req_id] = {
-            id: req_id, complete: false, callback: resolve
+            id: req_id, complete: false, callback: request => {
+                if (request.id === req_id)
+                    resolve(request.data);
+            }
         };
         ws.send_to_client('phue_gateway_req', {
-            id: req_id, request: request
+            id: req_id,
+            request: request
         }, client);
     },
     attach_events: _ => {
@@ -88,11 +91,35 @@ const ws = {
             }
         });
         ws.bind('phue_gateway_res', (client, req) => {
-            if (ws.gateway_res[req.req_id].complete == false) {
-                ws.gateway_res[req.req_id].complete = true;
-                ws.gateway_res[req.req_id].callback(req);
+            if (ws.gateway_res[req.id].complete == false) {
+                ws.gateway_res[req.id].complete = true;
+                ws.gateway_res[req.id].callback(req);
             }
         });
+    },
+    has_target_client: _ => {
+        for (var c_id in ws.clients) {
+            if (
+                ws.clients.hasOwnProperty(c_id) &&
+                ws.clients[c_id] !== null
+            ) {
+                if (ws.clients[c_id].target === true)
+                    return true;
+            }
+        }
+        return false;
+    },
+    get_target_client: _ => {
+        for (var c_id in ws.clients) {
+            if (
+                ws.clients.hasOwnProperty(c_id) &&
+                ws.clients[c_id] !== null
+            ) {
+                if (ws.clients[c_id].target === true)
+                    return ws.clients[c_id];
+            }
+        }
+        return null;
     },
     // ws wrapper infra
     encode_msg: (e, d) => {  // encode event+data to JSON
@@ -210,42 +237,41 @@ const ws = {
 const web = {
     server: null,
     request_handler: null,
-    // cors: (req, res, next) => {
-    //     res.header("Access-Control-Allow-Origin", "*");
-    //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    //     next();
-    // },
-    // return_error: (res, code, msg) => {
-    //     res.status(code);
-    //     web.set_type(res, 'application/json');
-    //     web.return_json({ status: code, success: false, message: msg });
-    // },
     handle_event: (req, res, ep, data) => {
-        try {
-            data = JSON.parse(data);
-        } catch (e) {
-            web.err("JSON error", e);
-        }
-        console.log("");
+        console.log("\t");
         web.log("received request")
         console.log("url: \t\t", req.url);
         console.log("endpoint: \t", ep);
         console.log("method: \t", req.method);
         console.log("headers: \n", req.headers);
         console.log("data: \n", data);
-        console.log("");
+        console.log("\t");
 
-        // TODO: send req to websocket, wait for response, send back response to phue client
-        // ws.await_response();
-
-        res.end();
+        // send req to websocket, wait for response, send back response to phue client
+        if (ws.has_target_client()) {
+            ws.await_response(ws.get_target_client(), {
+                url: req.url,
+                method: req.method,
+                headers: req.headers,
+                data: data
+            }, response => {
+                console.log("\t");
+                web.log("received response from gateway");
+                console.log(response);
+                console.log("\t");
+                res.end(response);
+            });
+        } else {
+            // return error
+            res.end();
+        }
     },
     // web infra
     initialize_server: resolve => {
         web.request_handler = (req, res) => {
             let body_data = '';
             req.on('data', chunk => { body_data += chunk; });
-            req.on('end', () => {
+            req.on('end', _ => {
                 web.handle_event(req, res, (`${req.url}`).split('/').slice(1), body_data);
             });
         };

@@ -5,5 +5,5 @@
     "gateway_url": "localhost:8081",
     "bridge_ip": "192.168.0.100",
     "secure": false,
-    "ws_reconnect_interval": 5000
+    "ws_reconnect_interval": 3000
 }
