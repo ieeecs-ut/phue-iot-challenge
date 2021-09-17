@@ -13,4 +13,4 @@ This is accomplished by directing all HTTP traffic over a websocket from an AWS 
 - tests
   - tests end-to-end
   - go to tests folder, activate venv with `source ./venv/bin/activate`, run `python3 main.py`
-  - edit `main.py` to select a test routine/case, and edit the target variable at the top to select what to test (IP address of a real hue bridge on the current neetwork, or the URL of this gateway)
+  - edit `main.py` to select a test routine/case, and edit the target variable at the top to select what to test (IP address of a real hue bridge on the current network, or the URL of this gateway)
