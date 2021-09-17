@@ -21,9 +21,9 @@ def test_b(target):
     bridge.connect()
     my_lights = bridge.get_light_objects('name')
 
-    my_lights['Big lamp'].on = True
+    my_lights['Small lamp'].on = True
     x,y = RGBtoXY(0, 0, 0)
-    bridge.set_light('Big lamp', 'xy', [x,y])
+    bridge.set_light('Small lamp', 'xy', [x,y])
     # to get the scene id
     #print(json.dumps(bridge.get_scene(), indent=2))
     bridge.activate_scene("1", "Fo0TM840Hsy0wcG")

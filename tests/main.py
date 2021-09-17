@@ -13,8 +13,8 @@ def main():
     print("phue gateway service tests")
     print("")
 
-    test_a(target)
-    # test_b(target)
+    # test_a(target)
+    test_b(target)
 
 # entry point
 if __name__ == "__main__":

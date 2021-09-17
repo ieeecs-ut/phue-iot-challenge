@@ -5,7 +5,8 @@
     "main": "gateway-internal.js",
     "scripts": {
         "start": "node gateway-internal.js prod",
-        "test": "nodemon --ignore 'mongodb/*' --ignore 'html/*' gateway-internal.js dev "
+        "test": "nodemon --ignore 'mongodb/*' --ignore 'html/*' gateway-internal.js dev ",
+        "persist": "nodemon --ignore 'mongodb/*' --ignore 'html/*' gateway-internal.js prod"
     },
     "author": "Anuv Gupta",
     "license": "ISC",
